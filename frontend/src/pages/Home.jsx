@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Hero from '../components/Hero';
 import DealsSection from '../components/DealsSection';
 import CategorySection from '../components/CategorySection';
@@ -58,42 +58,52 @@ import laptop from '../assets/Laptops.png';
 import cameras from '../assets/Gopro_Cameras.png';
 import phone from '../assets/iphone.png';
 
+
+import { fetchProducts } from '../services/api';
+
 const Home = () => {
     const { addToCart } = useCart();
-    const homeOutdoorItems = [
-        { name: "Sofa & chairs", price: "19", image: softChairs },
-        { name: "Appliences", price: "19", image: appliences },
-        { name: "Mattresses", price: "19", image: mattresses },
-        { name: "Crockery", price: "19", image: crockery },
-        { name: "Kitchen mixer", price: "100", image: kitchenMixer },
-        { name: "Blenders", price: "39", image: blenders },
-        { name: "Furniture", price: "19", image: furniture },
-        { name: "Plants", price: "10", image: plants },
-    ];
+    const [homeOutdoorItems, setHomeOutdoorItems] = useState([]);
+    const [electronicsItems, setElectronicsItems] = useState([]);
+    const [recommendedItems, setRecommendedItems] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const electronicsItems = [
-        { name: "Smart Watch", price: "179.99", image: smartWatch },
-        { name: "GoPro HERO9", price: "349.99", image: cameras },
-        { name: "Wireless Headphones", price: "348.00", image: headphones },
-        { name: "Smart Watch GTR", price: "179.99", image: smartWatch },
-        { name: "Gaming Bundle", price: "499.99", image: gamingSet },
-        { name: "HP Spectre Laptop", price: "1399.99", image: laptop },
-        { name: "Apple iPhone 11", price: "998.00", image: phone },
-        { name: "Electric Kettle", price: "240.00", image: kettle },
-    ];
+    useEffect(() => {
+        const loadHomeContent = async () => {
+            setLoading(true);
+            try {
+                const allFetchedProducts = await fetchProducts();
+                
+                // Map API data back to the simple structure used by CategorySection
+                const mapToHomeFormat = (items) => items.map(p => ({
+                    name: p.title,
+                    price: p.price.toString(),
+                    image: p.image
+                }));
 
-    const recommendedItems = [
-        { name: "T-shirts with multiple colors, for men", price: "10.30", image: tShirt },
-        { name: "Jeans shorts for men blue color", price: "10.30", image: shorts },
-        { name: "Brown winter coat medium size", price: "12.50", image: jacket },
-        { name: "Jeans bag for travel for men", price: "34.00", image: jeansBag },
-        { name: "Leather wallet", price: "99.00", image: wallet },
-        { name: "Blue suit jacket for men fit size", price: "9.99", image: blazer },
-        { name: "Wireless noise cancelling headsets", price: "8.99", image: headsets },
-        { name: "Ceramic crockery pot for kitchen", price: "10.30", image: crockeryRec },
-        { name: "Smart Watch", price: "179.99", image: watchRec },
-        { name: "Electric Kettle", price: "240.00", image: kettleRec },
-    ];
+                const homeItems = allFetchedProducts.filter(p => p.category === 'Home & Garden').slice(0, 8);
+                const electroItems = allFetchedProducts.filter(p => p.category === 'Electronics').slice(0, 8);
+                
+                setHomeOutdoorItems(mapToHomeFormat(homeItems));
+                setElectronicsItems(mapToHomeFormat(electroItems));
+
+                // Diversify Recommended: Take a few from each category to restore variety
+                const clothingItems = allFetchedProducts.filter(p => p.category === 'Clothing & Apparel');
+                const diverseRecommended = [
+                    ...clothingItems.slice(0, 4),
+                    ...homeItems.slice(4, 6),
+                    ...electroItems.slice(4, 8)
+                ];
+                setRecommendedItems(mapToHomeFormat(diverseRecommended));
+            } catch (err) {
+                console.error("Error loading home content:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadHomeContent();
+    }, []);
+
 
     const extraServicesData = [
         { title: "Source from Industry Hubs", icon: "search", image: industryHubs },

@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import axios from '../services/axios';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -7,9 +9,30 @@ export const useCart = () => useContext(CartContext);
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [orders, setOrders] = useState([]);
-
+    const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '' });
+    const { user } = useAuth();
 
+    const fetchOrders = useCallback(async () => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            const response = await axios.get('/orders/myorders');
+            setOrders(response.data);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            fetchOrders();
+        } else {
+            setOrders([]);
+        }
+    }, [user, fetchOrders]);
 
     const showNotification = useCallback((message) => {
         setToast({ show: true, message });
@@ -37,8 +60,15 @@ export const CartProvider = ({ children }) => {
 
     const clearCart = () => setCartItems([]);
 
-    const addOrder = (order) => {
-        setOrders(prevOrders => [order, ...prevOrders]);
+    const addOrder = async (orderData) => {
+        try {
+            const response = await axios.post('/orders', orderData);
+            setOrders(prevOrders => [response.data, ...prevOrders]);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating order:', error);
+            throw error;
+        }
     };
 
     const cartCount = (Array.isArray(cartItems) ? cartItems : []).reduce((acc, item) => acc + (item?.qty || 0), 0);

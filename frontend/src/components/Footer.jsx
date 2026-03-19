@@ -1,6 +1,5 @@
-import React from 'react';
-
-import logo from '../assets/logo-colored.png';
+import logo from '../assets/logo.svg';
+import { Link } from 'react-router-dom';
 import appStoreBadge from '../assets/misc/Group.png';
 import googlePlayBadge from '../assets/misc/market-button.png';
 import flagUS from '../assets/flags/US@2x.png';
@@ -16,48 +15,63 @@ const Footer = () => {
                             <img src={logo} alt="Brand Logo" className="h-[46px] w-[150px] object-contain -ml-2" />
                         </div>
                         <p className="text-[#505050] text-[16px] leading-[24px] mb-[18px] tracking-tight pr-4">
-                            Best information about the company gies here but now lorem ipsum is
-                        </p>
-                        <div className="flex space-x-[12px]">
-                            <SocialIcon type="facebook" />
-                            <SocialIcon type="twitter" />
-                            <SocialIcon type="linkedin" />
-                            <SocialIcon type="instagram" />
-                            <SocialIcon type="youtube" />
-                        </div>
+                        Best information about the company goes here but now lorem ipsum is
+                    </p>
+                    <div className="flex space-x-[12px]">
+                        <SocialIcon type="facebook" />
+                        <SocialIcon type="twitter" />
+                        <SocialIcon type="linkedin" />
+                        <SocialIcon type="instagram" />
+                        <SocialIcon type="youtube" />
                     </div>
+                </div>
 
-                    {/* Links Columns */}
-                    <div className="flex-1 flex flex-wrap justify-between lg:px-12 gap-6 w-full max-w-[700px]">
-                        <FooterLinkColumn
-                            title="About"
-                            links={["About Us", "Find store", "Categories", "Blogs"]}
-                        />
-                        <FooterLinkColumn
-                            title="Information"
-                            links={["Help Center", "Money Refund", "Shipping", "Contact us"]}
-                        />
-                        <FooterLinkColumn
-                            title="For users"
-                            links={["Login", "Register", "Settings", "My Orders"]}
-                        />
-                    </div>
+                {/* Links Columns */}
+                <div className="flex-1 flex flex-wrap justify-between lg:px-12 gap-6 w-full max-w-[700px]">
+                    <FooterLinkColumn
+                        title="About"
+                        links={[
+                            { text: "About Us", to: "/about" },
+                            { text: "Find store", to: "/find-store" },
+                            { text: "Categories", to: "/products" },
+                            { text: "Blogs", to: "/blogs" }
+                        ]}
+                    />
+                    <FooterLinkColumn
+                        title="Information"
+                        links={[
+                            { text: "Help Center", to: "/faq" },
+                            { text: "Money Refund", to: "/refund" },
+                            { text: "Shipping", to: "/shipping" },
+                            { text: "Contact us", to: "/contact" }
+                        ]}
+                    />
+                    <FooterLinkColumn
+                        title="For users"
+                        links={[
+                            { text: "Login", to: "/login" },
+                            { text: "Register", to: "/signup" },
+                            { text: "Settings", to: "/settings" },
+                            { text: "My Orders", to: "/orders" }
+                        ]}
+                    />
+                </div>
 
-                    {/* App Badges */}
-                    <div className="lg:w-[130px]">
-                        <h4 className="font-semibold text-[#1C1C1C] text-[16px] mb-4">Get app</h4>
-                        <div className="flex flex-col items-start space-y-[10px]">
-                            <img src={appStoreBadge} alt="Download on the App Store" className="h-[42px] w-auto object-contain cursor-pointer" />
-                            <img src={googlePlayBadge} alt="Get it on Google Play" className="h-[42px] w-auto object-contain cursor-pointer" />
-                        </div>
+                {/* App Badges */}
+                <div className="lg:w-[130px]">
+                    <h4 className="font-semibold text-[#1C1C1C] text-[16px] mb-4">Get app</h4>
+                    <div className="flex flex-col items-start space-y-[10px]">
+                        <img src={appStoreBadge} alt="Download on the App Store" className="h-[42px] w-auto object-contain cursor-pointer" />
+                        <img src={googlePlayBadge} alt="Get it on Google Play" className="h-[42px] w-auto object-contain cursor-pointer" />
                     </div>
                 </div>
             </div>
+        </div>
 
-            {/* Bottom Bar */}
-            <div className="bg-[#EFF2F4] border-t border-[#DEE2E7] py-6">
-                <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
-                    <p className="text-[#606060] text-[16px] mb-4 md:mb-0">© 2026 Ecommerce.</p>
+        {/* Bottom Bar */}
+        <div className="bg-[#EFF2F4] border-t border-[#DEE2E7] py-6">
+            <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+                <p className="text-[#606060] text-[16px] mb-4 md:mb-0">© 2026 Ecommerce by sibghamursaleen.</p>
                     <div className="flex items-center space-x-2 text-[#1C1C1C]">
                         <img src={flagUS} alt="US Flag" className="w-[24px] h-[17px] rounded-sm object-cover" />
                         <span className="text-[16px] font-medium">English</span>
@@ -72,11 +86,11 @@ const FooterLinkColumn = ({ title, links }) => (
     <div>
         <h4 className="font-medium text-[#1C1C1C] text-[16px] mb-3">{title}</h4>
         <ul className="space-y-[10px]">
-            {links.map((text, idx) => (
+            {links.map((link, idx) => (
                 <li key={idx}>
-                    <a href="#" className="text-[#8B96A5] hover:text-[#1C1C1C] transition-colors text-[16px] tracking-tight">
-                        {text}
-                    </a>
+                    <Link to={link.to} className="text-[#8B96A5] hover:text-[#1C1C1C] transition-colors text-[16px] tracking-tight">
+                        {link.text}
+                    </Link>
                 </li>
             ))}
         </ul>

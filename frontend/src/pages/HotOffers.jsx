@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { products as allProducts } from '../data/products';
+import { fetchProducts } from '../services/api';
 import NewsletterSection from '../components/NewsletterSection';
 import Skeleton from '../components/Skeleton';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 
 const HotOffers = () => {
+    const [hotProducts, setHotProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState({
         days: 2,
         hours: 14,
@@ -16,23 +18,34 @@ const HotOffers = () => {
 
     const { addToCart } = useCart();
 
-    // Specific categories as requested
-    const targetCategories = ["Electronics", "Home & Garden", "Appliances", "Clothing & Apparel"];
+    useEffect(() => {
+        const loadHotOffers = async () => {
+            setLoading(true);
+            try {
+                const allFetchedProducts = await fetchProducts();
+                
+                const targetCategories = ["Electronics", "Home & Garden", "Appliances", "Clothing & Apparel"];
+                
+                const discounted = allFetchedProducts.filter(p => 
+                    targetCategories.includes(p.category) && 
+                    p.oldPrice && 
+                    p.oldPrice > p.price
+                );
 
-    // Discount filtering and sorting
-    // Filter products that have discounts
-    const discountedProducts = allProducts.filter(p => 
-        targetCategories.includes(p.category) && 
-        p.oldPrice && 
-        p.oldPrice > p.price
-    );
-
-    // Get exactly 3 deals and 7 regular offers
-    const deals = discountedProducts.filter(p => p.deal).slice(0, 3);
-    const regularOffers = discountedProducts.filter(p => !p.deal).slice(0, 7);
-    
-    // Combine for a total of 10 items
-    const hotProducts = [...deals, ...regularOffers];
+                // Get exactly 3 deals and 7 regular offers or just slice top 10
+                const deals = discounted.filter(p => p.deal).slice(0, 3);
+                const regular = discounted.filter(p => !p.deal).slice(0, 7);
+                
+                const combined = [...deals, ...regular];
+                setHotProducts(combined.length > 0 ? combined : allFetchedProducts.slice(0, 10));
+            } catch (err) {
+                console.error("Error loading hot offers:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadHotOffers();
+    }, []);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -93,9 +106,23 @@ const HotOffers = () => {
 
                 {/* Deals Grid (More columns for smaller items) */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-                    {hotProducts.map(product => (
-                        <HotOfferCard key={product.id} product={product} onAddToCart={() => addToCart(product)} />
-                    ))}
+                    {loading ? (
+                        Array.from({ length: 10 }).map((_, idx) => (
+                            <div key={idx} className="bg-white rounded-2xl p-4 h-[300px] border border-gray-100">
+                                <Skeleton width="100%" height="160px" />
+                                <Skeleton width="80%" height="20px" className="mt-4" />
+                                <Skeleton width="40%" height="18px" className="mt-2" />
+                            </div>
+                        ))
+                    ) : hotProducts.length > 0 ? (
+                        hotProducts.map(product => (
+                            <HotOfferCard key={product.id} product={product} onAddToCart={() => addToCart(product)} />
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center py-20 bg-white rounded-2xl border border-gray-100">
+                            <p className="text-[#8B96A5]">Check back soon for upcoming hot deals!</p>
+                        </div>
+                    )}
                 </div>
             </main>
 

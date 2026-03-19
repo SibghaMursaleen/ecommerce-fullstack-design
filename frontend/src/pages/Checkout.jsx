@@ -8,6 +8,20 @@ const Checkout = () => {
     const { formatPrice } = useCurrency();
     const navigate = useNavigate();
     const [paymentMethod, setPaymentMethod] = useState('card');
+    const [loading, setLoading] = useState(false);
+    
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        address: '',
+        city: '',
+        zipCode: ''
+    });
+
+    const handleInputChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
     const safeCartItems = Array.isArray(cartItems) ? cartItems.filter(Boolean) : [];
     const subtotal = safeCartItems.reduce((acc, item) => acc + (Number(item?.price || 0) * (item?.qty || 1)), 0);
@@ -15,24 +29,41 @@ const Checkout = () => {
     const tax = safeCartItems.length > 0 ? 14.00 : 0;
     const total = Math.max(0, subtotal - discount + tax);
 
-    const handlePlaceOrder = (e) => {
+    const handlePlaceOrder = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
-        // Construct the order object
-        const newOrder = {
-            id: `ORD-${Math.floor(Math.random() * 1000000)}`,
-            date: new Date().toLocaleDateString(),
-            items: [...safeCartItems],
-            total: total.toFixed(2),
-            status: 'Processing',
-            paymentMethod: paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Cash on Delivery',
-            // In a real app we'd capture form data here
-        };
+        try {
+            // Construct the order object for the backend
+            const orderData = {
+                items: safeCartItems.map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    price: item.price,
+                    qty: item.qty,
+                    image: item.image
+                })),
+                shippingAddress: {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    address: formData.address,
+                    city: formData.city,
+                    zipCode: formData.zipCode
+                },
+                paymentMethod: paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Cash on Delivery',
+                totalAmount: total
+            };
 
-        addOrder(newOrder);
-        alert('Order placed successfully!');
-        clearCart();
-        navigate('/orders');
+            await addOrder(orderData);
+            alert('Order placed successfully!');
+            clearCart();
+            navigate('/orders');
+        } catch (error) {
+            console.error('Checkout error:', error);
+            alert('Failed to place order. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (safeCartItems.length === 0) {
@@ -66,27 +97,27 @@ const Checkout = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-[#1C1C1C]">First Name *</label>
-                                    <input required type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Enter first name" />
+                                    <input required name="firstName" value={formData.firstName} onChange={handleInputChange} type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Enter first name" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-[#1C1C1C]">Last Name *</label>
-                                    <input required type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Enter last name" />
+                                    <input required name="lastName" value={formData.lastName} onChange={handleInputChange} type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Enter last name" />
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
                                     <label className="text-sm font-medium text-[#1C1C1C]">Email Address *</label>
-                                    <input required type="email" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Enter email" />
+                                    <input required name="email" value={formData.email} onChange={handleInputChange} type="email" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Enter email" />
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
                                     <label className="text-sm font-medium text-[#1C1C1C]">Street Address *</label>
-                                    <input required type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="House number and street name" />
+                                    <input required name="address" value={formData.address} onChange={handleInputChange} type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="House number and street name" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-[#1C1C1C]">City *</label>
-                                    <input required type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="City" />
+                                    <input required name="city" value={formData.city} onChange={handleInputChange} type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="City" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-[#1C1C1C]">ZIP Code *</label>
-                                    <input required type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Postal code" />
+                                    <input required name="zipCode" value={formData.zipCode} onChange={handleInputChange} type="text" className="w-full border border-[#DEE2E7] rounded-[6px] px-3 py-2 text-[#1C1C1C] outline-none focus:border-[#0D6EFD]" placeholder="Postal code" />
                                 </div>
                             </div>
                         </div>
@@ -205,8 +236,17 @@ const Checkout = () => {
                                 </div>
                             </div>
 
-                            <button type="submit" className="w-full bg-[#00B517] text-white py-3 rounded-[6px] font-bold text-[18px] hover:bg-[#009e14] transition-colors shadow-sm">
-                                Place Order
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="w-full bg-[#00B517] text-white py-3 rounded-[6px] font-bold text-[18px] hover:bg-[#009e14] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <>
+                                        <span className="material-icons animate-spin text-xl">sync</span>
+                                        Processing...
+                                    </>
+                                ) : 'Place Order'}
                             </button>
                             <p className="text-center text-[#8B96A5] text-[12px] mt-3">
                                 By clicking Place Order, you agree to our terms and conditions.

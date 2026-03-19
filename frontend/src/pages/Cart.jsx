@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useAuth } from '../context/AuthContext';
 import iphone from '../assets/iphone.png';
 import gopro from '../assets/Gopro_Cameras.png';
 import smartWatch from '../assets/Smart_Watches.png';
@@ -12,6 +13,7 @@ import iphoneBlue from '../assets/deal_smartphone.png';
 const Cart = () => {
     const { cartItems, removeFromCart, addToCart, clearCart } = useCart();
     const { formatPrice } = useCurrency();
+    const { user, loading: authLoading } = useAuth();
 
     const [savedItems] = useState([
         { id: 'save-1', title: "Xiaomi Redmi Note 9 Pro, 128GB, Interstellar Black", price: 99.50, image: xiaomi },
@@ -33,6 +35,46 @@ const Cart = () => {
     const discount = safeCartItems.length > 0 ? 60.00 : 0;
     const tax = safeCartItems.length > 0 ? 14.00 : 0;
     const total = Math.max(0, subtotal - discount + tax);
+
+    if (authLoading) {
+        return (
+            <div className="bg-[#F7FAFC] min-h-screen py-20 flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <p className="mt-4 text-[#8B96A5] font-medium">Checking authentication...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="bg-[#F7FAFC] min-h-screen">
+                <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+                    <div className="bg-white border border-[#DEE2E7] rounded-[10px] p-10 max-w-[500px] w-full text-center shadow-sm">
+                        <div className="w-[120px] h-[120px] bg-[#EFF2F4] rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                            <span className="material-icons-outlined text-[#8B96A5] text-[64px]">shopping_cart</span>
+                            <div className="absolute top-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center border-4 border-white">
+                                <span className="material-icons text-white text-[18px]">lock</span>
+                            </div>
+                        </div>
+                        <h2 className="text-[#1C1C1C] text-[24px] font-bold mb-3">Login to view your cart</h2>
+                        <p className="text-[#505050] text-[16px] mb-8 leading-relaxed">
+                            Your shopping cart is waiting for you. Please sign in to see your items and proceed to checkout.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <Link to="/login" className="bg-primary text-white py-3 rounded-[6px] font-bold text-[16px] hover:bg-blue-700 transition-colors shadow-sm">
+                                Sign In
+                            </Link>
+                            <Link to="/signup" className="text-[#0D6EFD] font-medium hover:underline py-2">
+                                Create an account
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-[#F7FAFC] min-h-screen">

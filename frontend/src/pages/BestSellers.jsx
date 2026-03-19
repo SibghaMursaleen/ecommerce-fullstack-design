@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { products } from '../data/products';
 import { Link } from 'react-router-dom';
 import { useCurrency } from '../context/CurrencyContext';
+import { fetchProducts } from '../services/api';
+import Skeleton from '../components/Skeleton';
 
 const BestSellerCard = ({ product }) => {
     const { formatPrice } = useCurrency();
@@ -63,6 +64,8 @@ const BestSellerCard = ({ product }) => {
 };
 
 const BestSellers = () => {
+    const [bestSellers, setBestSellers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState({
         days: 4,
         hours: 13,
@@ -70,9 +73,22 @@ const BestSellers = () => {
         seconds: 56
     });
 
-    const bestSellers = products.filter(p => p.isBestSeller);
-
     useEffect(() => {
+        const loadBestSellers = async () => {
+            setLoading(true);
+            try {
+                const data = await fetchProducts();
+                // If the backend doesn't have a specific best seller endpoint, filter here
+                const filtered = data.filter(p => p.isBestSeller || (p.salesCount && parseInt(p.salesCount) > 100));
+                setBestSellers(filtered.length > 0 ? filtered : data.slice(0, 8)); // Fallback to first 8 if none marked
+            } catch (err) {
+                console.error("Error loading best sellers:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadBestSellers();
+
         const timer = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
@@ -129,9 +145,23 @@ const BestSellers = () => {
 
                 {/* Products Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {bestSellers.map(product => (
-                        <BestSellerCard key={product.id} product={product} />
-                    ))}
+                    {loading ? (
+                        Array.from({ length: 8 }).map((_, idx) => (
+                            <div key={idx} className="bg-white rounded-lg border border-border p-4 h-[350px]">
+                                <Skeleton width="100%" height="200px" />
+                                <Skeleton width="80%" height="24px" className="mt-4" />
+                                <Skeleton width="40%" height="20px" className="mt-2" />
+                            </div>
+                        ))
+                    ) : bestSellers.length > 0 ? (
+                        bestSellers.map(product => (
+                            <BestSellerCard key={product.id} product={product} />
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center py-20 bg-white rounded-lg border border-border">
+                            <p className="text-gray-text">No best sellers available at the moment.</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Trust Footer */}

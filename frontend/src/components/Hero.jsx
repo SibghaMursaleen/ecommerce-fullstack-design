@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import banner from '../assets/hero-banner.jpg';
 import { allCategories } from '../data/products';
+import { useAuth } from '../context/AuthContext';
 
 const Hero = () => {
+    const { user, isAdmin, logout } = useAuth();
+    const navigate = useNavigate();
 
     return (
         <section className="bg-white border border-border rounded-lg mt-5 overflow-hidden">
@@ -53,34 +56,59 @@ const Hero = () => {
                 </div>
 
                 {/* Right Sidebar Cards (Hidden on mobile/tablet) */}
-                <div className="hidden xl:flex lg:w-1/4 p-4 flex-col space-y-4 bg-white">
+                <div className="hidden xl:flex lg:w-1/4 p-4 flex-col space-y-4 bg-white border-l border-border">
                     {/* User Welcome Card */}
-                    <div className="bg-[#E3F0FF] p-4 rounded-lg">
+                    <div className="bg-[#E3F0FF] p-4 rounded-lg shadow-sm">
                         <div className="flex items-center space-x-3 mb-4">
-                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#8B96A5]">
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#8B96A5] shadow-sm">
                                 <span className="material-icons text-3xl">account_circle</span>
                             </div>
-                            <p className="text-dark leading-snug text-sm font-medium">Hi, user <br /> <span className="font-normal text-xs text-gray-text">let's get started</span></p>
+                            <div>
+                                <p className="text-dark leading-snug text-sm font-bold">Hi, {user ? user.name.split(' ')[0] : 'user'}</p>
+                                <p className="font-normal text-xs text-gray-text">{user ? 'Ready to shop?' : 'let\'s get started'}</p>
+                            </div>
                         </div>
-                        <button className="w-full bg-primary text-white py-2 rounded-lg font-semibold mb-2 hover:bg-blue-700 transition-colors text-sm">
-                            Join now
-                        </button>
-                        <button className="w-full bg-white text-primary py-2 rounded-lg font-semibold border border-border hover:bg-gray-50 transition-colors text-sm shadow-sm">
-                            Log in
-                        </button>
+                        {!user ? (
+                            <>
+                                <Link to="/signup" className="block w-full text-center bg-primary text-white py-2 rounded-lg font-bold mb-2 hover:bg-blue-700 transition-all text-sm active:scale-95 shadow-sm">
+                                    Join now
+                                </Link>
+                                <Link to="/login" className="block w-full text-center bg-white text-primary py-2 rounded-lg font-bold border border-[#DEE2E7] hover:bg-gray-50 transition-all text-sm shadow-sm active:scale-95">
+                                    Log in
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                {isAdmin ? (
+                                    <Link to="/admin" className="block w-full text-center bg-primary text-white py-2 rounded-lg font-bold mb-2 hover:bg-blue-700 transition-all text-sm active:scale-95 shadow-sm">
+                                        Admin Panel
+                                    </Link>
+                                ) : (
+                                    <Link to="/cart" className="block w-full text-center bg-primary text-white py-2 rounded-lg font-bold mb-2 hover:bg-blue-700 transition-all text-sm active:scale-95 shadow-sm">
+                                        View Cart
+                                    </Link>
+                                )}
+                                <button 
+                                    onClick={() => { logout(); navigate('/'); }}
+                                    className="w-full bg-white text-red-500 py-2 rounded-lg font-bold border border-[#DEE2E7] hover:bg-red-50 hover:border-red-200 transition-all text-sm shadow-sm active:scale-95"
+                                >
+                                    Log out
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Promo Card 1 */}
-                    <div className="bg-orange p-4 rounded-lg text-white flex-1 flex items-center">
-                        <p className="text-sm font-medium leading-relaxed">
-                            Get US $10 off <br /> with a new supplier
+                    <div className="bg-orange p-4 rounded-lg text-white flex-1 flex flex-col justify-center">
+                        <p className="text-sm font-bold leading-relaxed">
+                            Get PKR 1000 off <br /> <span className="font-normal opacity-90 text-xs">with a new supplier</span>
                         </p>
                     </div>
 
                     {/* Promo Card 2 */}
-                    <div className="bg-teal p-4 rounded-lg text-white flex-1 flex items-center">
-                        <p className="text-sm font-medium leading-relaxed">
-                            Send quotes with <br /> supplier preferences
+                    <div className="bg-teal p-4 rounded-lg text-white flex-1 flex flex-col justify-center">
+                        <p className="text-sm font-bold leading-relaxed">
+                            Send quotes with <br /> <span className="font-normal opacity-90 text-xs">supplier preferences</span>
                         </p>
                     </div>
                 </div>

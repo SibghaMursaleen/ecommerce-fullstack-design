@@ -1,8 +1,11 @@
 import React from 'react';
 import { useCurrency } from '../context/CurrencyContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const ProductCard = ({ product }) => {
     const { formatPrice } = useCurrency();
+    const { toggleWishlist, isInWishlist } = useWishlist();
+    const isFavorited = isInWishlist(product.id);
     
     return (
         <div className="bg-white border border-[#DEE2E7] rounded-[6px] p-4 flex flex-col md:flex-row gap-6 mb-4 hover:shadow-sm transition-shadow">
@@ -15,8 +18,13 @@ const ProductCard = ({ product }) => {
             <div className="flex-1 flex flex-col pt-2">
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="text-[#1C1C1C] text-[16px] font-medium max-w-[80%]">{product.title}</h3>
-                    <button className="w-[40px] h-[40px] rounded-[6px] border border-[#DEE2E7] flex items-center justify-center text-[#0D6EFD] hover:bg-blue-50 transition-colors">
-                        <span className="material-icons-outlined text-[20px]">favorite_border</span>
+                    <button 
+                        onClick={() => toggleWishlist(product)}
+                        className={`w-[40px] h-[40px] rounded-[6px] border ${isFavorited ? 'border-red-500 bg-red-50' : 'border-[#DEE2E7] hover:bg-blue-50'} flex items-center justify-center transition-colors group`}
+                    >
+                        <span className={`material-icons${isFavorited ? '' : '-outlined'} text-[20px] ${isFavorited ? 'text-red-500' : 'text-[#0D6EFD]'}`}>
+                            {isFavorited ? 'favorite' : 'favorite_border'}
+                        </span>
                     </button>
                 </div>
 

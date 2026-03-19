@@ -1,53 +1,109 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import UserDashboardLayout from './UserDashboardLayout';
 
 const Profile = () => {
+    const { user, isAdmin } = useAuth();
+
+    if (!user) return null; // Handled by Layout
+
     return (
-        <div className="bg-[#F7FAFC] min-h-screen py-10">
-            <div className="container mx-auto px-4 max-w-4xl">
-                {/* Breadcrumbs */}
-                <nav className="flex items-center text-[16px] text-[#8B96A5] mb-6 space-x-2">
-                    <Link to="/" className="cursor-pointer hover:text-[#1C1C1C] transition-colors">Home</Link>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 8L14 12L10 16" stroke="#8B96A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="text-[#1C1C1C]">Profile</span>
-                </nav>
-
-                <h1 className="text-3xl font-bold text-[#1C1C1C] mb-6">My Profile</h1>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-1 bg-white border border-[#DEE2E7] rounded-lg p-6">
-                        <div className="flex flex-col items-center mb-6 text-center">
-                            <div className="w-24 h-24 bg-[#DEE2E7] text-white rounded-full flex items-center justify-center mb-4">
-                                <span className="material-icons text-5xl">person</span>
-                            </div>
-                            <h2 className="text-xl font-semibold text-[#1C1C1C]">Guest User</h2>
-                            <p className="text-[#8B96A5] text-sm">guest@example.com</p>
+        <UserDashboardLayout>
+            <div className="space-y-6">
+                {/* Welcome Card */}
+                <div className="bg-gradient-to-r from-primary to-blue-700 rounded-xl p-8 text-white shadow-lg relative overflow-hidden">
+                    <div className="relative z-10">
+                        <h2 className="text-2xl font-bold mb-2">Hello, {user?.name?.split(' ')[0] || 'User'}!</h2>
+                        <p className="text-white/80 max-w-md">Welcome to your dashboard. Here you can track your recent orders and manage your account information.</p>
+                        <div className="mt-6 flex gap-3">
+                            <Link to="/orders" className="bg-white text-primary px-4 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-gray-50 transition-all">
+                                View My Orders
+                            </Link>
+                            <Link to="/products" className="bg-primary-dark/20 text-white border border-white/30 px-4 py-2 rounded-lg font-bold text-sm hover:bg-white/10 transition-all">
+                                Shop More
+                            </Link>
                         </div>
-                        <ul className="space-y-2 border-t border-[#DEE2E7] pt-4">
-                            <li><Link to="/profile" className="flex items-center text-[#1C1C1C] hover:text-[#0D6EFD] py-2"><span className="material-icons mr-3">manage_accounts</span> Account Settings</Link></li>
-                            <li><Link to="/orders" className="flex items-center text-[#1C1C1C] hover:text-[#0D6EFD] py-2"><span className="material-icons mr-3">local_shipping</span> My Orders</Link></li>
-                            <li><Link to="/messages" className="flex items-center text-[#1C1C1C] hover:text-[#0D6EFD] py-2"><span className="material-icons mr-3">chat</span> Messages</Link></li>
-                        </ul>
+                    </div>
+                    {/* Abstract Decorative Circles */}
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                    <div className="absolute right-20 -bottom-20 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Account Stats */}
+                    <div className="bg-white border border-[#DEE2E7] rounded-xl p-6 shadow-sm">
+                        <h3 className="text-lg font-bold text-[#1C1C1C] mb-6 flex items-center gap-2">
+                            <span className="material-icons text-primary">analytics</span>
+                            Account Overview
+                        </h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-[#F7FAFC] p-4 rounded-lg">
+                                <p className="text-xs text-[#8B96A5] uppercase font-bold tracking-wider mb-1">Status</p>
+                                <p className="text-green-600 font-bold flex items-center text-sm">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                    Active
+                                </p>
+                            </div>
+                            <div className="bg-[#F7FAFC] p-4 rounded-lg">
+                                <p className="text-xs text-[#8B96A5] uppercase font-bold tracking-wider mb-1">Role</p>
+                                <p className={`font-bold text-sm ${isAdmin ? 'text-orange' : 'text-primary'}`}>{isAdmin ? 'Admin' : 'Shopper'}</p>
+                            </div>
+                            <div className="bg-[#F7FAFC] p-4 rounded-lg md:col-span-2">
+                                <p className="text-xs text-[#8B96A5] uppercase font-bold tracking-wider mb-1">Email Verified</p>
+                                <div className="flex items-center gap-2 text-[#1C1C1C] font-semibold text-sm">
+                                    <span className="material-icons text-green-500 text-base">verified</span>
+                                    Yes
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="md:col-span-2 bg-white border border-[#DEE2E7] rounded-lg p-6 flex flex-col items-center justify-center text-center">
-                        <span className="material-icons-outlined text-[#8B96A5] text-5xl mb-4">lock</span>
-                        <h3 className="text-xl font-semibold text-[#1C1C1C] mb-2">Sign in to customize your profile</h3>
-                        <p className="text-[#8B96A5] mb-6 max-w-sm">Save your shipping addresses, manage payment methods, and get a tailored shopping experience.</p>
-                        <div className="flex gap-4">
-                            <button className="bg-[#0D6EFD] text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors">
-                                Sign In
-                            </button>
-                            <button className="bg-white border border-[#DEE2E7] text-[#0D6EFD] px-6 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors shadow-sm">
-                                Register
+                    {/* Quick Settings */}
+                    <div className="bg-white border border-[#DEE2E7] rounded-xl p-6 shadow-sm">
+                        <h3 className="text-lg font-bold text-[#1C1C1C] mb-6 flex items-center gap-2">
+                            <span className="material-icons text-primary">settings</span>
+                            Quick Actions
+                        </h3>
+                        <div className="space-y-3">
+                            <Link to="/settings" className="flex items-center justify-between p-3 rounded-lg border border-[#F1F3F5] hover:bg-[#F7FAFC] transition-all group">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-icons text-[#8B96A5] group-hover:text-primary transition-colors">edit</span>
+                                    <span className="text-sm font-medium">Edit Personal Info</span>
+                                </div>
+                                <span className="material-icons text-sm text-[#DEE2E7]">chevron_right</span>
+                            </Link>
+                            <Link to="/security" className="flex items-center justify-between p-3 rounded-lg border border-[#F1F3F5] hover:bg-[#F7FAFC] transition-all group">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-icons text-[#8B96A5] group-hover:text-primary transition-colors">lock</span>
+                                    <span className="text-sm font-medium">Change Password</span>
+                                </div>
+                                <span className="material-icons text-sm text-[#DEE2E7]">chevron_right</span>
+                            </Link>
+                            <button className="w-full flex items-center justify-between p-3 rounded-lg border border-[#F1F3F5] hover:bg-[#F7FAFC] transition-all group">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-icons text-[#8B96A5] group-hover:text-primary transition-colors">notifications</span>
+                                    <span className="text-sm font-medium">Notifications</span>
+                                </div>
+                                <span className="material-icons text-sm text-[#DEE2E7]">chevron_right</span>
                             </button>
                         </div>
                     </div>
                 </div>
+
+                {/* Recent Activity Section */}
+                <div className="bg-white border border-[#DEE2E7] rounded-xl p-8 shadow-sm">
+                    <h3 className="text-[18px] font-bold text-[#1C1C1C] mb-6">Recent Activity Highlights</h3>
+                    <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-[#F1F3F5] rounded-xl">
+                        <div className="w-16 h-16 bg-[#F7FAFC] rounded-full flex items-center justify-center mb-4">
+                            <span className="material-icons text-[#DEE2E7] text-4xl">timeline</span>
+                        </div>
+                        <p className="text-[#8B96A5] font-medium">No recent profile activity to show.</p>
+                        <p className="text-xs text-[#8B96A5] mt-1 text-center max-w-xs">Once you start ordering or updating your profile, highlights will appear here.</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </UserDashboardLayout>
     );
 };
 

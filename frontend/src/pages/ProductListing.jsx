@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import SidebarFilters from '../components/SidebarFilters';
-import NewsletterSection from '../components/NewsletterSection';
-import Skeleton from '../components/Skeleton';
+import { useLocation, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { products as allProducts, allCategories } from '../data/products';
+import { useWishlist } from '../context/WishlistContext';
+import { fetchProducts } from '../services/api';
+import { allCategories } from '../data/products';
+import SidebarFilters from '../components/SidebarFilters';
+import Skeleton from '../components/Skeleton';
+import NewsletterSection from '../components/NewsletterSection';
 
 const BreadcrumbChevron = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -23,10 +25,34 @@ const ProductListing = () => {
     const initialCategory = searchParams.get('category') || 'All';
     const sortType = searchParams.get('sort') || '';
 
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [activeFilters, setActiveFilters] = useState({ brands: [], features: [], condition: null });
     const [currentPage, setCurrentPage] = useState(1);
     const { addToCart } = useCart();
+
+    // Fetch products from backend
+    useEffect(() => {
+        const loadProducts = async () => {
+            setLoading(true);
+            try {
+                const data = await fetchProducts({ 
+                    search: searchQuery, 
+                    category: activeCategory === 'All' ? '' : activeCategory 
+                });
+                setProducts(data);
+                setError(null);
+            } catch (err) {
+                console.error("Error fetching products:", err);
+                setError("Failed to load products. Please check your connection.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadProducts();
+    }, [searchQuery, activeCategory]);
 
     // Sync category if URL changes (e.g. searching from navbar again)
     useEffect(() => {
@@ -36,16 +62,11 @@ const ProductListing = () => {
 
     const itemsPerPage = 9;
 
-    // Filter products by category, search query, and active sidebar filters
-    let processedProducts = allProducts.filter(p => {
-        // Category & Search
-        const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
-        const matchesSearch = searchQuery === '' || p.title.toLowerCase().includes(searchQuery.toLowerCase());
-
+    // Further filter products locally by sidebar filters (Price, Brand, Features etc.)
+    let processedProducts = products.filter(p => {
         // Sidebar Filters
         const matchesBrand = activeFilters.brands.length === 0 || activeFilters.brands.includes(p.brand);
         const matchesCondition = !activeFilters.condition || p.condition === activeFilters.condition;
-        // Require the product to have ALL selected features (or you could do ANY)
         const matchesFeatures = activeFilters.features.length === 0 ||
             activeFilters.features.every(feature => p.features?.includes(feature));
 
@@ -56,7 +77,7 @@ const ProductListing = () => {
             if (activeFilters.price.max && p.price > Number(activeFilters.price.max)) matchesPrice = false;
         }
 
-        return matchesCategory && matchesSearch && matchesBrand && matchesCondition && matchesFeatures && matchesPrice;
+        return matchesBrand && matchesCondition && matchesFeatures && matchesPrice;
     });
 
     // Apply Specialized Sorting if sort parameter exists
@@ -113,7 +134,7 @@ const ProductListing = () => {
                                 categories={allCategories}
                                 activeCategory={activeCategory}
                                 onCategoryChange={handleCategoryChange}
-                                currentProducts={allProducts.filter(p => activeCategory === 'All' || p.category === activeCategory)}
+                                currentProducts={products}
                                 onFilterChange={setActiveFilters}
                             />
                         </aside>
@@ -162,9 +183,29 @@ const ProductListing = () => {
                             {/* Product Grid */}
                             {currentProducts.length > 0 ? (
                                 <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
-                                    {currentProducts.map(product => (
-                                        <GridProductCard key={product.id} product={product} viewMode={viewMode} />
+                                    {(loading ? Array.from({ length: 8 }) : currentProducts).map((product, index) => (
+                                        product ? (
+                                            <GridProductCard key={product.id} product={product} viewMode={viewMode} />
+                                        ) : (
+                                            <div key={index} className="bg-white border border-[#DEE2E7] rounded-[6px] p-4 h-[300px]">
+                                                <Skeleton width="100%" height="160px" />
+                                                <Skeleton width="80%" height="20px" className="mt-4" />
+                                                <Skeleton width="40%" height="20px" className="mt-2" />
+                                            </div>
+                                        )
                                     ))}
+                                </div>
+                            ) : error ? (
+                                <div className="bg-white border border-[#DEE2E7] rounded-[6px] py-16 flex flex-col items-center justify-center text-center">
+                                    <span className="material-icons text-[#FA3434] text-[64px] mb-4">error_outline</span>
+                                    <h3 className="text-[#1C1C1C] text-[20px] font-semibold mb-2">Error loading products</h3>
+                                    <p className="text-[#8B96A5] max-w-md">{error}</p>
+                                    <button 
+                                        onClick={() => window.location.reload()}
+                                        className="mt-4 bg-primary text-white px-6 py-2 rounded-[6px] hover:bg-blue-700 transition-colors"
+                                    >
+                                        Try Again
+                                    </button>
                                 </div>
                             ) : (
                                 <div className="bg-white border border-[#DEE2E7] rounded-[6px] py-16 flex flex-col items-center justify-center text-center">
@@ -219,6 +260,8 @@ const ProductListing = () => {
 const GridProductCard = ({ product, viewMode }) => {
     const { addToCart } = useCart();
     const { formatPrice } = useCurrency();
+    const { toggleWishlist, isInWishlist } = useWishlist();
+    const isFavorited = isInWishlist(product.id);
     const [isLoaded, setIsLoaded] = useState(false);
     const stars = Math.round(product.rating / 2);
     if (viewMode === 'list') {
@@ -264,8 +307,11 @@ const GridProductCard = ({ product, viewMode }) => {
                         <Link to={`/product/${product.id}`} className="text-[#0D6EFD] text-[14px] font-medium hover:underline">View details</Link>
                     </div>
                 </div>
-                <button className="w-[38px] h-[38px] border border-[#DEE2E7] rounded-[6px] flex items-center justify-center hover:bg-gray-50 flex-shrink-0 self-start">
-                    <span className="material-icons-outlined text-[#0D6EFD] text-[20px]">favorite_border</span>
+                <button 
+                    onClick={() => toggleWishlist(product)}
+                    className={`w-[38px] h-[38px] border ${isFavorited ? 'border-red-500 bg-red-50' : 'border-[#DEE2E7] hover:bg-gray-50'} rounded-[6px] flex items-center justify-center flex-shrink-0 self-start transition-colors`}
+                >
+                    <span className={`material-icons${isFavorited ? '' : '-outlined'} text-[20px] ${isFavorited ? 'text-red-500' : 'text-[#0D6EFD]'}`}>{isFavorited ? 'favorite' : 'favorite_border'}</span>
                 </button>
             </div>
         );
@@ -282,8 +328,11 @@ const GridProductCard = ({ product, viewMode }) => {
                     className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={() => setIsLoaded(true)}
                 />
-                <button className="absolute top-2 right-2 w-[34px] h-[34px] border border-[#DEE2E7] rounded-[6px] bg-white flex items-center justify-center hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="material-icons-outlined text-[#0D6EFD] text-[18px]">favorite_border</span>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
+                    className={`absolute top-2 right-2 w-[34px] h-[34px] border border-[#DEE2E7] rounded-[6px] bg-white flex items-center justify-center hover:bg-gray-50 ${isFavorited ? 'opacity-100 border-red-500' : 'opacity-0 group-hover:opacity-100'} transition-all`}
+                >
+                    <span className={`material-icons${isFavorited ? '' : '-outlined'} text-[18px] ${isFavorited ? 'text-red-500' : 'text-[#0D6EFD]'}`}>{isFavorited ? 'favorite' : 'favorite_border'}</span>
                 </button>
             </div>
             <Link to={`/product/${product.id}`} className="block relative z-10 w-full mb-2">

@@ -1,29 +1,26 @@
-import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import DiscountBanner from '../components/DiscountBanner';
-import Skeleton from '../components/Skeleton';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { products } from '../data/products';
-import xiaomi from '../assets/xiaomi.jpg';
-import gopro from '../assets/Gopro_Cameras.png';
-import smartWatch from '../assets/Smart_Watches.png';
-import headphones from '../assets/boost_headphones.png';
-import tShirt from '../assets/Recommandations/t-shirt.png';
-import shorts from '../assets/Recommandations/shorts.png';
-import jacket from '../assets/Recommandations/jacket.png';
-import blazer from '../assets/Recommandations/balzer.png';
-import watchRec from '../assets/Recommandations/Smart_Watches.png';
+import { useWishlist } from '../context/WishlistContext';
+import { fetchProductById, fetchProducts } from '../services/api';
+import Skeleton from '../components/Skeleton';
+import DiscountBanner from '../components/DiscountBanner';
 
 const BreadcrumbChevron = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M10 8L14 12L10 16" stroke="#8B96A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 
-
-
 const ProductDetails = () => {
+    const { id } = useParams();
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [relatedProducts, setRelatedProducts] = useState([]);
+    const [smallRecommendations, setSmallRecommendations] = useState([]);
+
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('description');
@@ -31,22 +28,61 @@ const ProductDetails = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const { addToCart } = useCart();
     const { formatPrice } = useCurrency();
+    const { toggleWishlist, isInWishlist } = useWishlist();
+    const isFavorited = product ? isInWishlist(product.id) : false;
 
-    const { id } = useParams();
-    const product = products.find(p => p.id === Number(id));
-
-    const relatedProducts = products.filter(p => p.category === product?.category && p.id !== product?.id).slice(0, 4);
-    const smallRecommendations = products.filter(p => p.id !== product?.id).sort(() => 0.5 - Math.random()).slice(0, 5);
+    useEffect(() => {
+        const loadProductDetails = async () => {
+            setLoading(true);
+            try {
+                const data = await fetchProductById(id);
+                setProduct(data);
+                
+                // Fetch related products (same category)
+                const related = await fetchProducts({ category: data.category });
+                setRelatedProducts(related.filter(p => p.id !== data.id).slice(0, 4));
+                
+                // Fetch some recommendations
+                const recs = await fetchProducts();
+                setSmallRecommendations(recs.filter(p => p.id !== data.id).sort(() => 0.5 - Math.random()).slice(0, 5));
+                
+                setError(null);
+            } catch (err) {
+                console.error("Error fetching product details:", err);
+                setError("Product not found or error loading details.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadProductDetails();
+        // Reset states when ID changes
+        setSelectedImage(0);
+        setQuantity(1);
+    }, [id]);
 
     const images = product && product.image ? [product.image] : [];
     const colors = product?.colors || [];
 
-    if (!product) {
+    if (loading) {
+        return (
+            <div className="bg-[#F7FAFC] min-h-screen py-10">
+                <div className="container mx-auto px-4">
+                    <Skeleton width="100%" height="400px" />
+                    <div className="mt-8">
+                        <Skeleton width="60%" height="30px" />
+                        <Skeleton width="100%" height="150px" className="mt-4" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !product) {
         return (
             <div className="bg-[#F7FAFC] min-h-screen py-10 flex items-center justify-center">
                 <div className="text-center bg-white p-10 rounded-lg border border-[#DEE2E7]">
-                    <h2 className="text-2xl font-bold text-[#1C1C1C] mb-2">Product Not Found</h2>
-                    <p className="text-[#8B96A5] mb-6">Sorry, we couldn't find the product you're looking for.</p>
+                    <h2 className="text-2xl font-bold text-[#1C1C1C] mb-2">{error || "Product Not Found"}</h2>
+                    <p className="text-[#8B96A5] mb-6">Sorry, we couldn't find the product or an error occurred.</p>
                     <Link to="/products" className="bg-[#0D6EFD] text-white px-6 py-2 rounded-[6px] font-medium hover:bg-blue-700">
                         Back to Products
                     </Link>
@@ -190,8 +226,13 @@ const ProductDetails = () => {
                                     >
                                         Buy now
                                     </button>
-                                    <button className="w-[44px] h-[44px] border border-[#DEE2E7] rounded-[6px] flex items-center justify-center hover:bg-gray-50">
-                                        <span className="material-icons-outlined text-[#8B96A5] text-[22px]">favorite_border</span>
+                                    <button 
+                                        onClick={() => toggleWishlist(product)}
+                                        className={`w-[44px] h-[44px] border ${isFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-[#DEE2E7] text-[#8B96A5] hover:bg-gray-50'} rounded-[6px] flex items-center justify-center transition-colors`}
+                                    >
+                                        <span className={`material-icons${isFavorited ? '' : '-outlined'} text-[22px]`}>
+                                            {isFavorited ? 'favorite' : 'favorite_border'}
+                                        </span>
                                     </button>
                                 </div>
 

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo-colored.png';
+import logo from '../assets/logo.svg';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 import { allCategories } from '../data/products';
 
 const Navbar = () => {
@@ -10,7 +12,9 @@ const Navbar = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchCategory, setSearchCategory] = useState('All category');
     const { cartCount } = useCart();
+    const { wishlist } = useWishlist();
     const { currency, setCurrency } = useCurrency();
+    const { user, logout, isAdmin } = useAuth();
     const navigate = useNavigate();
 
     // Dropdown States
@@ -92,18 +96,43 @@ const Navbar = () => {
 
                 {/* Icons (Desktop) */}
                 <div className="hidden sm:flex items-center space-x-6 text-gray-text">
-                    <Link to="/profile" className="flex flex-col items-center cursor-pointer hover:text-primary transition-colors">
-                        <span className="material-icons text-2xl">person</span>
-                        <span className="text-xs mt-1">Profile</span>
-                    </Link>
                     <Link to="/messages" className="flex flex-col items-center cursor-pointer hover:text-primary transition-colors">
                         <span className="material-icons text-2xl">message</span>
                         <span className="text-xs mt-1">Message</span>
                     </Link>
-                    <Link to="/orders" className="flex flex-col items-center cursor-pointer hover:text-primary transition-colors">
-                        <span className="material-icons text-2xl">favorite_border</span>
-                        <span className="text-xs mt-1">Orders</span>
+                    <Link to="/wishlist" className="flex flex-col items-center cursor-pointer hover:text-primary transition-colors relative">
+                        <span className={`material-icons ${wishlist.length > 0 ? 'text-red-500' : ''}`}>
+                            {wishlist.length > 0 ? 'favorite' : 'favorite_border'}
+                        </span>
+                        {wishlist.length > 0 && (
+                            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
+                                {wishlist.length}
+                            </span>
+                        )}
+                        <span className="text-xs mt-1">Favorites</span>
                     </Link>
+                    {user ? (
+                        <div className="flex flex-col items-center cursor-pointer hover:text-primary transition-colors group relative">
+                             <span className="material-icons text-2xl">person</span>
+                             <span className="text-xs mt-1 max-w-[60px] truncate">{user?.name?.split(' ')[0] || 'User'}</span>
+                             <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-[#DEE2E7] rounded-lg shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[60]">
+                                 <div className="px-4 py-2 border-b border-[#F1F3F5] mb-1">
+                                     <p className="text-sm font-bold text-[#1C1C1C] truncate">{user?.name || 'User'}</p>
+                                     <p className="text-xs text-[#8B96A5] truncate">{user?.email || ''}</p>
+                                 </div>
+                                <Link to="/profile" className="block px-4 py-2 text-sm text-[#1C1C1C] hover:bg-[#F7FAFC]">Profile</Link>
+                                <Link to="/wishlist" className="block px-4 py-2 text-sm text-[#1C1C1C] hover:bg-[#F7FAFC]">My Wishlist</Link>
+                                <Link to="/orders" className="block px-4 py-2 text-sm text-[#1C1C1C] hover:bg-[#F7FAFC]">My Orders</Link>
+                                {isAdmin && <Link to="/admin" className="block px-4 py-2 text-sm text-primary font-bold hover:bg-[#F7FAFC]">Admin Panel</Link>}
+                                <button onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium">Log Out</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <Link to="/login" className="flex flex-col items-center cursor-pointer hover:text-primary transition-colors">
+                            <span className="material-icons text-2xl">person</span>
+                            <span className="text-xs mt-1">Sign in</span>
+                        </Link>
+                    )}
                     <Link to="/cart" className="flex flex-col items-center cursor-pointer hover:text-primary transition-colors relative">
                         <span className="material-icons text-2xl">shopping_cart</span>
                         {cartCount > 0 && (
@@ -151,12 +180,24 @@ const Navbar = () => {
                     <div className="absolute inset-0 bg-black/40" onClick={() => setIsMenuOpen(false)}></div>
                     <div className="absolute top-0 left-0 bottom-0 w-[280px] bg-white shadow-xl flex flex-col">
                         <div className="p-5 border-b border-border bg-[#F7FAFC]">
-                            <div className="w-12 h-12 bg-[#DEE2E7] rounded-full flex items-center justify-center text-white mb-3">
-                                <span className="material-icons text-3xl">person</span>
-                            </div>
-                            <Link to="/" onClick={() => setIsMenuOpen(false)} className="text-[16px] text-[#1C1C1C] hover:underline">
-                                Sign in <span className="text-[#8B96A5]">|</span> Register
-                            </Link>
+                            {user ? (
+                                <>
+                                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white mb-3">
+                                        <span className="text-xl font-bold">{user?.name?.charAt(0) || 'U'}</span>
+                                    </div>
+                                    <p className="text-[18px] font-bold text-[#1C1C1C]">{user?.name || 'User'}</p>
+                                    <button onClick={logout} className="text-sm text-red-600 font-medium mt-1">Log Out</button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 bg-[#DEE2E7] rounded-full flex items-center justify-center text-white mb-3">
+                                        <span className="material-icons text-3xl">person</span>
+                                    </div>
+                                    <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-[16px] text-[#1C1C1C] hover:underline">
+                                        Sign in <span className="text-[#8B96A5]">|</span> Register
+                                    </Link>
+                                </>
+                            )}
                         </div>
                         <nav className="flex-1 overflow-y-auto py-4">
                             <div className="px-5 space-y-4">
@@ -166,9 +207,17 @@ const Navbar = () => {
                                 <Link to="/products" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 text-dark hover:text-primary">
                                     <span className="material-icons">list</span> Categories
                                 </Link>
-                                <div className="flex items-center gap-4 text-dark hover:text-primary cursor-pointer">
-                                    <span className="material-icons">favorite_border</span> Favorites
-                                </div>
+                                <Link to="/wishlist" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 text-dark hover:text-primary relative">
+                                    <span className={`material-icons ${wishlist.length > 0 ? 'text-red-500' : ''}`}>
+                                        {wishlist.length > 0 ? 'favorite' : 'favorite_border'}
+                                    </span> 
+                                    Wishlist
+                                    {wishlist.length > 0 && (
+                                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto">
+                                            {wishlist.length}
+                                        </span>
+                                    )}
+                                </Link>
                                 <div className="flex items-center gap-4 text-dark hover:text-primary cursor-pointer">
                                     <span className="material-icons">inventory_2</span> My orders
                                 </div>

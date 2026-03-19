@@ -34,7 +34,7 @@ const CategorySection = ({ title, items, sidebarImg, otherProductsLink = "/produ
                     >
                         <div className="flex-1 pr-1 sm:pr-2">
                             <div className="flex justify-between items-start">
-                                <p className="text-base text-dark font-medium leading-snug">{item.name}</p>
+                                <p className="text-sm text-dark font-medium leading-snug line-clamp-2 h-[40px]">{item.name}</p>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();

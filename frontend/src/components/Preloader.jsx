@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from '../assets/logo-colored.png';
+import logo from '../assets/logo.svg';
 
 const Preloader = () => {
     return (

@@ -54,7 +54,7 @@ const ContactUs = () => {
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-[#1C1C1C] mb-1">Our Office</h3>
-                                <p className="text-[#505050]">123 E-commerce St,<br />Tech District, NY 10001</p>
+                                <p className="text-[#505050]">45-C, 24th Commercial St,<br />Phase 2 Ext Defence, Karachi, Pakistan</p>
                             </div>
                         </div>
 
@@ -64,7 +64,7 @@ const ContactUs = () => {
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-[#1C1C1C] mb-1">Call Us</h3>
-                                <p className="text-[#505050]">+1 (555) 123-4567<br />Mon-Fri, 9AM-6PM</p>
+                                <p className="text-[#505050]">+92 (21) 3588-4567<br />Mon-Fri, 9AM-6PM</p>
                             </div>
                         </div>
 
@@ -74,7 +74,7 @@ const ContactUs = () => {
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-[#1C1C1C] mb-1">Email Us</h3>
-                                <p className="text-[#505050]">support@example.com<br />sales@example.com</p>
+                                <p className="text-[#505050]">support@brand.com.pk<br />sales@brand.com.pk</p>
                             </div>
                         </div>
                     </div>

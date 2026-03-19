@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import UserDashboardLayout from './UserDashboardLayout';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 
 const Orders = () => {
-    const { orders } = useCart();
+    const { orders, loading } = useCart();
     const { formatPrice } = useCurrency();
 
     // Review Modal State
@@ -26,147 +27,151 @@ const Orders = () => {
     };
 
     return (
-        <div className="bg-[#F7FAFC] min-h-screen py-10">
-            <div className="container mx-auto px-4 max-w-4xl">
-                {/* Breadcrumbs */}
-                <nav className="flex items-center text-[16px] text-[#8B96A5] mb-6 space-x-2">
-                    <Link to="/" className="cursor-pointer hover:text-[#1C1C1C] transition-colors">Home</Link>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 8L14 12L10 16" stroke="#8B96A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="text-[#1C1C1C]">My Orders</span>
-                </nav>
+        <UserDashboardLayout>
+            <div className="space-y-6">
+                <div className="bg-white border border-[#DEE2E7] rounded-xl p-8 shadow-sm">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-[#1C1C1C]">Order History</h2>
+                        <span className="text-sm text-[#8B96A5]">{orders?.length || 0} orders total</span>
+                    </div>
 
-                <h1 className="text-3xl font-bold text-[#1C1C1C] mb-6">My Orders</h1>
-
-                {orders && orders.length > 0 ? (
-                    <div className="space-y-6">
-                        {orders.map((order) => (
-                            <div key={order.id} className="bg-white border border-[#DEE2E7] rounded-lg overflow-hidden">
-                                <div className="bg-[#F7FAFC] border-b border-[#DEE2E7] p-4 flex flex-wrap justify-between items-center gap-4">
-                                    <div className="flex gap-6 text-sm">
-                                        <div>
-                                            <p className="text-[#8B96A5] mb-0.5">Order ID</p>
-                                            <p className="font-semibold text-[#1C1C1C]">{order.id}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[#8B96A5] mb-0.5">Date Placed</p>
-                                            <p className="font-medium text-[#1C1C1C]">{order.date}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[#8B96A5] mb-0.5">Total</p>
-                                            <p className="font-semibold text-[#1C1C1C]">{formatPrice(order.total)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[#8B96A5] mb-0.5">Payment Method</p>
-                                            <p className="font-medium text-[#1C1C1C]">{order.paymentMethod}</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span className="bg-blue-100 text-[#0D6EFD] px-3 py-1 rounded-full text-xs font-semibold">
-                                            {order.status}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="p-4 space-y-4">
-                                    {order.items.map((item, idx) => (
-                                        <div key={idx} className="flex gap-4 items-center">
-                                            <div className="w-16 h-16 border border-[#DEE2E7] rounded-[6px] p-1 flex-shrink-0 flex items-center justify-center">
-                                                <img src={item.image} alt={item.title} className="max-w-full max-h-full object-contain" />
+                    {loading ? (
+                        <div className="flex justify-center py-20">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                        </div>
+                    ) : !orders || orders.length === 0 ? (
+                        <div className="text-center py-20 bg-[#F7FAFC] rounded-xl border-2 border-dashed border-[#DEE2E7]">
+                            <span className="material-icons text-6xl text-[#DEE2E7] mb-4">inventory_2</span>
+                            <h3 className="text-lg font-semibold text-[#1C1C1C]">No orders yet</h3>
+                            <p className="text-[#8B96A5] mb-6">You haven't placed any orders yet. Start shopping to see them here!</p>
+                            <Link to="/products" className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-all inline-block shadow-md">
+                                Start Shopping
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {orders.map((order) => (
+                                <div key={order?._id || order?.id || Math.random()} className="border border-[#DEE2E7] rounded-xl overflow-hidden transition-all hover:shadow-md">
+                                    {/* Order Header */}
+                                    <div className="bg-[#F7FAFC] p-4 flex flex-wrap items-center justify-between gap-4 border-b border-[#DEE2E7]">
+                                        <div className="flex gap-6">
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-[#8B96A5] tracking-wider mb-1">Order Placed</p>
+                                                <p className="text-sm text-[#1C1C1C] font-semibold">{new Date(order.createdAt || order.date).toLocaleDateString()}</p>
                                             </div>
-                                            <div className="flex-1">
-                                                <Link to={`/products`} className="text-[#1C1C1C] font-medium hover:text-[#0D6EFD] transition-colors line-clamp-1">
-                                                    {item.title}
-                                                </Link>
-                                                <p className="text-[#8B96A5] text-sm mt-1">Qty: {item.qty} • {formatPrice(item.price)}</p>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-[#8B96A5] tracking-wider mb-1">Total</p>
+                                                <p className="text-sm text-[#1C1C1C] font-bold">{formatPrice(order?.totalAmount || order?.total || 0)}</p>
                                             </div>
                                             <div className="hidden sm:block">
+                                                <p className="text-[10px] uppercase font-bold text-[#8B96A5] tracking-wider mb-1">Status</p>
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                                    order.status === 'Processing' ? 'bg-blue-50 text-primary' :
+                                                    order.status === 'Delivered' ? 'bg-green-50 text-green-600' : 'bg-gray-100'
+                                                }`}>
+                                                    {order.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs text-[#8B96A5] font-mono">
+                                            #{(order?._id || order?.id || '00000000').slice(-8).toUpperCase()}
+                                        </div>
+                                    </div>
+
+                                    {/* Order Items */}
+                                    <div className="p-6 space-y-4">
+                                        {order?.items?.map((item, idx) => (
+                                            <div key={idx} className="flex gap-4 items-center">
+                                                <div className="w-16 h-16 border border-[#DEE2E7] rounded p-1 flex-shrink-0 bg-white">
+                                                    <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-sm font-semibold text-[#1C1C1C] truncate">{item.title}</h4>
+                                                    <p className="text-xs text-[#8B96A5]">Qty: {item.qty} • {formatPrice(item.price)}</p>
+                                                </div>
                                                 <button
                                                     onClick={() => openReviewModal(item)}
-                                                    className="text-[#0D6EFD] border border-[#0D6EFD] px-4 py-1.5 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors"
+                                                    className="text-primary font-bold text-xs border border-primary px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors shrink-0"
                                                 >
                                                     Write Review
                                                 </button>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
+
+                                    {/* Order Footer */}
+                                    <div className="px-6 py-3 bg-white border-t border-[#F1F3F5] flex justify-between items-center text-xs">
+                                        <p className="text-[#8B96A5]">Payment: <span className="font-bold text-[#505050]">{order.paymentMethod}</span></p>
+                                        <Link to="/products" className="text-primary font-bold hover:underline">Buy again</Link>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="bg-white border border-[#DEE2E7] rounded-lg p-16 flex flex-col items-center justify-center text-center">
-                        <span className="material-icons text-[#8B96A5] text-6xl mb-4">inventory_2</span>
-                        <h3 className="text-xl font-semibold text-[#1C1C1C] mb-2">No orders placed</h3>
-                        <p className="text-[#8B96A5] mb-6 max-w-md">You haven't placed any orders yet. Once you make a purchase, you can track your shipments and view invoices here.</p>
-                        <Link to="/products" className="bg-[#0D6EFD] text-white px-6 py-2.5 rounded-md font-medium hover:bg-blue-700 transition-colors">
-                            Start Shopping
-                        </Link>
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Review Modal */}
             {isReviewModalOpen && reviewItem && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-                        <div className="flex justify-between items-center mb-4 border-b border-[#DEE2E7] pb-4">
-                            <h3 className="text-xl font-semibold text-[#1C1C1C]">Write a Review</h3>
-                            <button onClick={() => setIsReviewModalOpen(false)} className="text-[#8B96A5] hover:text-[#1C1C1C]">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-[#1C1C1C]">Share Your Thoughts</h3>
+                            <button onClick={() => setIsReviewModalOpen(false)} className="text-[#8B96A5] hover:text-[#1C1C1C] p-1">
                                 <span className="material-icons">close</span>
                             </button>
                         </div>
 
-                        <div className="flex gap-4 items-center mb-6">
-                            <img src={reviewItem.image} alt={reviewItem.title} className="w-16 h-16 object-contain border border-[#DEE2E7] rounded p-1" />
-                            <p className="text-[#1C1C1C] font-medium text-sm line-clamp-2">{reviewItem.title}</p>
+                        <div className="flex gap-4 items-center mb-8 p-3 bg-[#F7FAFC] rounded-xl border border-[#DEE2E7]">
+                            <img src={reviewItem.image} alt={reviewItem.title} className="w-14 h-14 object-contain" />
+                            <p className="text-[#1C1C1C] font-semibold text-sm line-clamp-2">{reviewItem.title}</p>
                         </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-[#1C1C1C] mb-2">Overall Rating</label>
-                            <div className="flex gap-1">
+                        <div className="mb-6">
+                            <label className="block text-sm font-bold text-[#505050] mb-3 text-center">How would you rate it?</label>
+                            <div className="flex justify-center gap-2">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <span
                                         key={star}
                                         onClick={() => setRating(star)}
-                                        className={`material-icons text-3xl cursor-pointer ${star <= rating ? 'text-[#FF9017]' : 'text-[#DEE2E7]'}`}
+                                        className={`material-icons text-4xl cursor-pointer transition-all active:scale-90 ${star <= rating ? 'text-[#FF9017]' : 'text-[#DEE2E7]'}`}
                                     >
-                                        star
+                                        {star <= rating ? 'star' : 'star_border'}
                                     </span>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-[#1C1C1C] mb-2">Add a written review</label>
+                        <div className="mb-8">
+                            <label className="block text-sm font-bold text-[#505050] mb-2">Write your review</label>
                             <textarea
                                 rows="4"
-                                className="w-full border border-[#DEE2E7] rounded-md p-3 text-sm focus:outline-none focus:border-[#0D6EFD]"
-                                placeholder="What did you like or dislike? What did you use this product for?"
+                                className="w-full border border-[#DEE2E7] rounded-xl p-4 text-sm focus:outline-none focus:border-primary transition-all resize-none"
+                                placeholder="What did you like or dislike? How was the quality?"
                                 value={reviewText}
                                 onChange={(e) => setReviewText(e.target.value)}
                             ></textarea>
                         </div>
 
-                        <div className="flex justify-end gap-3">
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => setIsReviewModalOpen(false)}
-                                className="px-5 py-2.5 text-[#505050] font-medium border border-[#DEE2E7] rounded-md hover:bg-gray-50 transition-colors"
+                                className="flex-1 px-5 py-3 text-[#505050] font-bold border border-[#DEE2E7] rounded-xl hover:bg-gray-50 transition-colors"
                             >
-                                Cancel
+                                Not now
                             </button>
                             <button
                                 onClick={submitReview}
-                                className="px-5 py-2.5 bg-[#0D6EFD] text-white font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                className="flex-1 px-5 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50"
                                 disabled={!reviewText.trim()}
                             >
-                                Submit Review
+                                Post Review
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </UserDashboardLayout>
     );
 };
 
